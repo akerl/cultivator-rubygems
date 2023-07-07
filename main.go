@@ -3,11 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 
 	"github.com/akerl/cultivator/plugin"
@@ -17,31 +16,34 @@ var filePattern = regexp.MustCompile(`^(Gemfile|.*\.gemspec)$`)
 var pattern = regexp.MustCompile(`^(.*(?:_dependency|gem)) '([\w]+)', '~> ([\d.]+)'$`)
 
 func run(_ string) error {
-	var files []string
+	doBundlerUpdate := false
 
-	err := filepath.Walk(".", func(path string, info fs.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if filePattern.MatchString(path) {
-			files = append(files, path)
-		}
-		return nil
-	})
+	files, err := os.ReadDir(".")
 	if err != nil {
 		return err
 	}
 
 	for _, file := range files {
-		err := plugin.FindReplace(file, pattern, gemCheck)
-		if err != nil {
-			return err
+		if filePattern.MatchString(file.Name()) {
+			err := plugin.FindReplace(file.Name(), pattern, gemCheck)
+			if err != nil {
+				return err
+			}
+		} else if file.Name() == "Gemfile.lock" {
+			doBundlerUpdate = true
 		}
 	}
 
+	if !doBundlerUpdate {
+		return nil
+	}
+
 	cmd := exec.Command("bundle", "update")
-	return cmd.Run()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(string(out))
+	}
+	return nil
 }
 
 type gem struct {

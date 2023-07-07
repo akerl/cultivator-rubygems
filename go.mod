@@ -2,7 +2,7 @@ module github.com/akerl/cultivator-rubygems
 
 go 1.20
 
-require github.com/akerl/cultivator v0.0.15
+require github.com/akerl/cultivator v0.0.16
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
