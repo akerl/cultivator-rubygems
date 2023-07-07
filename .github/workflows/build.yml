@@ -5,7 +5,7 @@ name: Build
     branches:
     - main
     tags:
-    - '**'
+    - "**"
   pull_request_target:
 jobs:
   build:
@@ -33,4 +33,4 @@ jobs:
       env:
         EXPORTER_TOKEN: "${{ secrets.EXPORTER_TOKEN }}"
         JOB_STATUS: "${{ job.status }}"
-      if: "${{ always() }}"
+      if: always() && github.ref == 'refs/heads/main'
